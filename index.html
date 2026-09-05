@@ -239,15 +239,15 @@ const CONFIG = {
   SHEET_WEBAPP_URL: "https://script.google.com/macros/s/AKfycbwkSLXy_Qf-k-eUeRnZZTtvm2HzeThkATYB_Ytiy0qnJdsc1t495noFwk9cXJjAhu72/exec",
 
   // Les personnes qui répondent (boutons affichés en haut)
-  PEOPLE: ["Papa", "Antoine"],
+  PEOPLE: ["Papa", "Frangin"],
 
   // Les 5 questions du jour (toujours les mêmes)
   QUESTIONS: [
-    "Etat de forme ?",
-    "Objectif atteint ?",
+    "Comment tu te sens aujourd'hui, sur 10 ?",
+    "Qu'est-ce que tu as fait de bien aujourd'hui ?",
+    "Un truc qui t'a embêté ?",
     "Type de séance ?",
-    "Nombre de buts ?",
-    "Douleur ?"
+    "Objectif atteint ?"
   ]
 };
 /* ============================================================ */
@@ -332,18 +332,24 @@ document.getElementById('quizForm').addEventListener('submit', async (e) => {
   setStatus('Envoi en cours…', false);
 
   try {
-    await fetch(CONFIG.SHEET_WEBAPP_URL, {
+    const response = await fetch(CONFIG.SHEET_WEBAPP_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ date: todayISO, person: currentPerson, answers })
     });
+
+    const result = await response.json();
+
+    if (!response.ok || result.status !== 'ok') {
+      throw new Error(result.message || `Réponse HTTP ${response.status}`);
+    }
 
     localStorage.setItem(storageKey(currentPerson), JSON.stringify(answers));
     setStatus('Réponses envoyées, merci !', false, true);
     document.getElementById('alreadyBlock').style.display = 'block';
     document.getElementById('quizForm').style.display = 'none';
   } catch (err) {
-    setStatus('Erreur d\'envoi — vérifie ta connexion et réessaie.', true);
+    setStatus('Erreur d\'envoi : ' + err.message, true);
   } finally {
     submitBtn.disabled = false;
   }
