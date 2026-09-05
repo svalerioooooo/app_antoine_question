@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le carnet du jour</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink: #232323;
+    --ink-soft: #5a5548;
+    --paper: #EAE4D6;
+    --paper-deep: #DED5C1;
+    --card: #F5F1E6;
+    --line: #C9BEA4;
+    --accent: #5B6E4F;
+    --accent-deep: #45543C;
+    --brick: #9A4530;
+  }
+
+  * { box-sizing: border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background: var(--paper);
+    background-image:
+      linear-gradient(var(--paper-deep) 1px, transparent 1px);
+    background-size: 100% 2.1rem;
+    font-family: 'IBM Plex Sans', sans-serif;
+    color: var(--ink);
+    display:flex;
+    justify-content:center;
+    padding: 2.5rem 1.2rem 4rem;
+  }
+
+  main{
+    width:100%;
+    max-width: 560px;
+  }
+
+  .masthead{
+    text-align:center;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 1.4rem;
+  }
+
+  .masthead .kicker{
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    letter-spacing: 0.02em;
+    margin: 0 0 0.3rem;
+  }
+
+  .masthead h1{
+    font-family: 'Source Serif 4', serif;
+    font-weight: 600;
+    font-size: clamp(1.7rem, 5vw, 2.3rem);
+    margin: 0;
+    text-transform: capitalize;
+  }
+
+  .people{
+    display:flex;
+    gap: 0.6rem;
+    justify-content:center;
+    margin: 1.6rem 0 2rem;
+  }
+
+  .people button{
+    font-family: inherit;
+    font-size: 0.95rem;
+    padding: 0.55rem 1.3rem;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    color: var(--ink);
+    cursor:pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .people button.active{
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #F5F1E6;
+  }
+
+  .card{
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 1.8rem 1.6rem 1.6rem;
+  }
+
+  .question{
+    display:flex;
+    gap: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .question:last-of-type{ margin-bottom: 0; }
+
+  .qnum{
+    font-family: 'Source Serif 4', serif;
+    font-size: 1.05rem;
+    color: var(--accent-deep);
+    padding-top: 0.35rem;
+    flex-shrink: 0;
+    width: 1.4rem;
+  }
+
+  .qbody{ flex: 1; }
+
+  .qbody label{
+    display:block;
+    font-size: 0.98rem;
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+  }
+
+  .qbody textarea{
+    width:100%;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: var(--ink);
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 0.55rem 0.7rem;
+    resize: vertical;
+    min-height: 2.6rem;
+  }
+
+  .qbody textarea:focus{
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .actions{
+    margin-top: 1.8rem;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap: 0.7rem;
+  }
+
+  button.submit{
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #F5F1E6;
+    background: var(--accent-deep);
+    border: none;
+    border-radius: 3px;
+    padding: 0.75rem 1.8rem;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  button.submit:hover{ background: var(--accent); }
+  button.submit:disabled{ background: #a9a290; cursor: default; }
+
+  .status{
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    text-align:center;
+    min-height: 1.2rem;
+  }
+
+  .status.error{ color: var(--brick); }
+  .status.ok{ color: var(--accent-deep); }
+
+  .already{
+    text-align:center;
+    padding: 1rem 0 0.3rem;
+  }
+
+  .already p{
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+    margin: 0 0 0.7rem;
+  }
+
+  .already button{
+    font-family: inherit;
+    font-size: 0.88rem;
+    background: none;
+    border: none;
+    text-decoration: underline;
+    color: var(--accent-deep);
+    cursor: pointer;
+    padding: 0;
+  }
+
+  footer{
+    text-align:center;
+    margin-top: 2rem;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+  }
+</style>
+</head>
+<body>
+<main>
+
+  <div class="masthead">
+    <p class="kicker">Rituel quotidien</p>
+    <h1 id="dateHeading"></h1>
+  </div>
+
+  <div class="people" id="peopleSelector"></div>
+
+  <div class="card" id="formCard">
+    <form id="quizForm">
+      <div id="questionsWrap"></div>
+      <div class="actions">
+        <button type="submit" class="submit" id="submitBtn">Envoyer mes réponses</button>
+        <p class="status" id="statusMsg"></p>
+      </div>
+    </form>
+    <div class="already" id="alreadyBlock" style="display:none;">
+      <p>Réponses déjà enregistrées aujourd'hui pour cette personne.</p>
+      <button id="editAgainBtn">Modifier quand même</button>
+    </div>
+  </div>
+
+  <footer>Carnet privé — <span id="footerNote"></span></footer>
+
+</main>
+
+<script>
+/* ============================================================
+   CONFIGURATION — à personnaliser
+   ============================================================ */
+const CONFIG = {
+  // Colle ici l'URL de ton Web App Google Apps Script (voir README)
+  SHEET_WEBAPP_URL: "https://script.google.com/macros/s/AKfycbwkSLXy_Qf-k-eUeRnZZTtvm2HzeThkATYB_Ytiy0qnJdsc1t495noFwk9cXJjAhu72/exec",
+
+  // Les personnes qui répondent (boutons affichés en haut)
+  PEOPLE: ["Papa", "Antoine"],
+
+  // Les 5 questions du jour (toujours les mêmes)
+  QUESTIONS: [
+    "Etat de forme ?",
+    "Objectif atteint ?",
+    "Type de séance ?",
+    "Nombre de buts ?",
+    "Douleur ?"
+  ]
+};
+/* ============================================================ */
+
+const todayISO = new Date().toISOString().slice(0, 10);
+const dateHeading = document.getElementById('dateHeading');
+dateHeading.textContent = new Date().toLocaleDateString('fr-FR', {
+  weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+});
+document.getElementById('footerNote').textContent = CONFIG.PEOPLE.join(' & ');
+
+let currentPerson = null;
+
+const peopleSelector = document.getElementById('peopleSelector');
+CONFIG.PEOPLE.forEach(name => {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.textContent = name;
+  btn.addEventListener('click', () => selectPerson(name));
+  peopleSelector.appendChild(btn);
+});
+
+const questionsWrap = document.getElementById('questionsWrap');
+CONFIG.QUESTIONS.forEach((q, i) => {
+  const row = document.createElement('div');
+  row.className = 'question';
+  row.innerHTML = `
+    <div class="qnum">${i + 1}.</div>
+    <div class="qbody">
+      <label for="q${i}">${q}</label>
+      <textarea id="q${i}" rows="1"></textarea>
+    </div>`;
+  questionsWrap.appendChild(row);
+});
+
+function storageKey(person) {
+  return `carnet_${todayISO}_${person}`;
+}
+
+function selectPerson(name) {
+  currentPerson = name;
+  [...peopleSelector.children].forEach(b => b.classList.toggle('active', b.textContent === name));
+
+  const saved = localStorage.getItem(storageKey(name));
+  const alreadyBlock = document.getElementById('alreadyBlock');
+  const quizForm = document.getElementById('quizForm');
+
+  if (saved) {
+    const answers = JSON.parse(saved);
+    answers.forEach((a, i) => { document.getElementById(`q${i}`).value = a; });
+    alreadyBlock.style.display = 'block';
+    quizForm.style.display = 'none';
+  } else {
+    alreadyBlock.style.display = 'none';
+    quizForm.style.display = 'block';
+    CONFIG.QUESTIONS.forEach((_, i) => { document.getElementById(`q${i}`).value = ''; });
+  }
+  document.getElementById('statusMsg').textContent = '';
+  document.getElementById('statusMsg').className = 'status';
+}
+
+document.getElementById('editAgainBtn').addEventListener('click', () => {
+  document.getElementById('alreadyBlock').style.display = 'none';
+  document.getElementById('quizForm').style.display = 'block';
+});
+
+document.getElementById('quizForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!currentPerson) {
+    setStatus('Choisis d\'abord qui répond, en haut.', true);
+    return;
+  }
+
+  const answers = CONFIG.QUESTIONS.map((_, i) => document.getElementById(`q${i}`).value.trim());
+  if (answers.some(a => a === '')) {
+    setStatus('Réponds aux 5 questions avant d\'envoyer.', true);
+    return;
+  }
+
+  const submitBtn = document.getElementById('submitBtn');
+  submitBtn.disabled = true;
+  setStatus('Envoi en cours…', false);
+
+  try {
+    await fetch(CONFIG.SHEET_WEBAPP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ date: todayISO, person: currentPerson, answers })
+    });
+
+    localStorage.setItem(storageKey(currentPerson), JSON.stringify(answers));
+    setStatus('Réponses envoyées, merci !', false, true);
+    document.getElementById('alreadyBlock').style.display = 'block';
+    document.getElementById('quizForm').style.display = 'none';
+  } catch (err) {
+    setStatus('Erreur d\'envoi — vérifie ta connexion et réessaie.', true);
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+
+function setStatus(msg, isError, isOk) {
+  const el = document.getElementById('statusMsg');
+  el.textContent = msg;
+  el.className = 'status' + (isError ? ' error' : isOk ? ' ok' : '');
+}
+
+// Sélectionne la première personne par défaut
+if (CONFIG.PEOPLE.length) selectPerson(CONFIG.PEOPLE[0]);
+</script>
+</body>
+</html>
