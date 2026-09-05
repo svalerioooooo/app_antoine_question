@@ -138,6 +138,30 @@
     border-color: var(--accent);
   }
 
+  .scale{
+    display:flex;
+    gap: 0.5rem;
+  }
+
+  .scale button{
+    font-family: inherit;
+    font-size: 0.95rem;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--ink);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .scale button.active{
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #F5F1E6;
+  }
+
   .actions{
     margin-top: 1.8rem;
     display:flex;
@@ -239,15 +263,16 @@ const CONFIG = {
   SHEET_WEBAPP_URL: "https://script.google.com/macros/s/AKfycbwkSLXy_Qf-k-eUeRnZZTtvm2HzeThkATYB_Ytiy0qnJdsc1t495noFwk9cXJjAhu72/exec",
 
   // Les personnes qui répondent (boutons affichés en haut)
-  PEOPLE: ["Papa", "Frangin"],
+  PEOPLE: ["Papa", "Antoine"],
 
-  // Les 5 questions du jour (toujours les mêmes)
+  // Les 5 questions du jour (toujours les mêmes).
+  // type: "scale" → boutons de 1 à 5 / type: "text" → réponse libre
   QUESTIONS: [
-    "Comment tu te sens aujourd'hui, sur 10 ?",
-    "Qu'est-ce que tu as fait de bien aujourd'hui ?",
-    "Un truc qui t'a embêté ?",
-    "Type de séance ?",
-    "Objectif atteint ?"
+    { text: "Etat de forme ?", type: "scale" },
+    { text: "Etat mental ?", type: "text" },
+    { text: "Avis sur la seance ?", type: "text" },
+    { text: "Douleurs ?", type: "scale" },
+    { text: "Objectif de la séance atteints ?", type: "text" }
   ]
 };
 /* ============================================================ */
@@ -274,14 +299,69 @@ const questionsWrap = document.getElementById('questionsWrap');
 CONFIG.QUESTIONS.forEach((q, i) => {
   const row = document.createElement('div');
   row.className = 'question';
-  row.innerHTML = `
-    <div class="qnum">${i + 1}.</div>
-    <div class="qbody">
-      <label for="q${i}">${q}</label>
-      <textarea id="q${i}" rows="1"></textarea>
-    </div>`;
+
+  const qbody = document.createElement('div');
+  qbody.className = 'qbody';
+
+  const label = document.createElement('label');
+  label.textContent = q.text;
+  qbody.appendChild(label);
+
+  if (q.type === 'scale') {
+    const scale = document.createElement('div');
+    scale.className = 'scale';
+    scale.id = `q${i}`;
+    scale.dataset.value = '';
+    for (let n = 1; n <= 5; n++) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = n;
+      btn.addEventListener('click', () => {
+        scale.dataset.value = n;
+        [...scale.children].forEach(b => b.classList.toggle('active', b.textContent == n));
+      });
+      scale.appendChild(btn);
+    }
+    qbody.appendChild(scale);
+  } else {
+    const textarea = document.createElement('textarea');
+    textarea.id = `q${i}`;
+    textarea.rows = 1;
+    qbody.appendChild(textarea);
+  }
+
+  row.innerHTML = `<div class="qnum">${i + 1}.</div>`;
+  row.appendChild(qbody);
   questionsWrap.appendChild(row);
 });
+
+function getAnswerValue(i) {
+  const q = CONFIG.QUESTIONS[i];
+  const el = document.getElementById(`q${i}`);
+  return q.type === 'scale' ? el.dataset.value : el.value.trim();
+}
+
+function setAnswerValue(i, value) {
+  const q = CONFIG.QUESTIONS[i];
+  const el = document.getElementById(`q${i}`);
+  if (q.type === 'scale') {
+    el.dataset.value = value;
+    [...el.children].forEach(b => b.classList.toggle('active', b.textContent == value));
+  } else {
+    el.value = value;
+  }
+}
+
+function clearAnswerValue(i) {
+  const q = CONFIG.QUESTIONS[i];
+  const el = document.getElementById(`q${i}`);
+  if (q.type === 'scale') {
+    el.dataset.value = '';
+    [...el.children].forEach(b => b.classList.remove('active'));
+  } else {
+    el.value = '';
+  }
+}
 
 function storageKey(person) {
   return `carnet_${todayISO}_${person}`;
@@ -297,13 +377,13 @@ function selectPerson(name) {
 
   if (saved) {
     const answers = JSON.parse(saved);
-    answers.forEach((a, i) => { document.getElementById(`q${i}`).value = a; });
+    answers.forEach((a, i) => setAnswerValue(i, a));
     alreadyBlock.style.display = 'block';
     quizForm.style.display = 'none';
   } else {
     alreadyBlock.style.display = 'none';
     quizForm.style.display = 'block';
-    CONFIG.QUESTIONS.forEach((_, i) => { document.getElementById(`q${i}`).value = ''; });
+    CONFIG.QUESTIONS.forEach((_, i) => clearAnswerValue(i));
   }
   document.getElementById('statusMsg').textContent = '';
   document.getElementById('statusMsg').className = 'status';
@@ -321,7 +401,7 @@ document.getElementById('quizForm').addEventListener('submit', async (e) => {
     return;
   }
 
-  const answers = CONFIG.QUESTIONS.map((_, i) => document.getElementById(`q${i}`).value.trim());
+  const answers = CONFIG.QUESTIONS.map((_, i) => getAnswerValue(i));
   if (answers.some(a => a === '')) {
     setStatus('Réponds aux 5 questions avant d\'envoyer.', true);
     return;
