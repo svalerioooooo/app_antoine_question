@@ -185,6 +185,17 @@
     color: #F5F1E6;
   }
 
+  .scale button.na-btn{
+    color: var(--brick);
+    border-color: var(--brick);
+  }
+
+  .scale button.na-btn.active{
+    background: var(--brick);
+    border-color: var(--brick);
+    color: #F5F1E6;
+  }
+
   .actions{
     margin-top: 1.8rem;
     display:flex;
@@ -349,6 +360,34 @@ CONFIG.QUESTIONS.forEach((q, i) => {
     scale.id = `q${i}`;
     scale.dataset.value = '';
 
+    if (q.plus) {
+      const naBtn = document.createElement('button');
+      naBtn.type = 'button';
+      naBtn.textContent = 'X';
+      naBtn.className = 'na-btn';
+      naBtn.title = "Pas eu l'occasion pendant la séance";
+      naBtn.addEventListener('click', () => {
+        scale.dataset.value = 'X';
+        [...scale.children].forEach(b => {
+          b.classList.toggle('active', b === naBtn);
+          if (b.dataset.plus) b.textContent = '+';
+        });
+      });
+      scale.appendChild(naBtn);
+
+      const zeroBtn = document.createElement('button');
+      zeroBtn.type = 'button';
+      zeroBtn.textContent = '0';
+      zeroBtn.addEventListener('click', () => {
+        scale.dataset.value = 0;
+        [...scale.children].forEach(b => {
+          b.classList.toggle('active', b === zeroBtn);
+          if (b.dataset.plus) b.textContent = '+';
+        });
+      });
+      scale.appendChild(zeroBtn);
+    }
+
     for (let n = 1; n <= 5; n++) {
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -405,11 +444,13 @@ function setAnswerValue(i, value) {
     const num = parseInt(value);
     [...el.children].forEach(b => {
       if (b.dataset.plus) {
-        const isPlusActive = num > 5;
+        const isPlusActive = !isNaN(num) && num > 5;
         b.classList.toggle('active', isPlusActive);
         b.textContent = isPlusActive ? num : '+';
+      } else if (b.textContent === 'X') {
+        b.classList.toggle('active', value === 'X');
       } else {
-        b.classList.toggle('active', parseInt(b.textContent) === num);
+        b.classList.toggle('active', !isNaN(num) && parseInt(b.textContent) === num);
       }
     });
   } else {
